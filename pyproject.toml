@@ -1,7 +1,8 @@
 [project]
 name = "annuaire-project"
+auteur = "Mohamed NEIMY"
 version = "0.1.0"
-description = "Add your description here"
+    description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
@@ -14,8 +15,7 @@ dev = [
     "mypy>=2.3.1",
     "ruff>=0.16.8",
 ]
+[[tool.mypy.overrides]]
+module = ["pandas.*"]
+ignore_missing_imports = true
 
-[tool.uv.workspace]
-members = [
-    "annuaire-project",
-]

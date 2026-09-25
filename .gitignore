@@ -12,6 +12,8 @@ wheels/
 # Data files
 data/
 *.csv
+*.DS_Store
+
 
 # Environment variables
 .env
