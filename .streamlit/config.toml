@@ -1,0 +1,30 @@
+# Thème de l'application : clair, sobre, barre latérale bleu nuit.
+
+[client]
+toolbarMode = "minimal"
+
+[theme]
+base = "light"
+primaryColor = "#2453A6"
+backgroundColor = "#F4F6FA"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#1B2537"
+linkColor = "#2453A6"
+borderColor = "#DCE2EC"
+showWidgetBorder = true
+baseRadius = "0.6rem"
+buttonRadius = "0.5rem"
+baseFontSize = 15
+headingFontWeights = [700, 650, 600, 600, 600, 600]
+headingFontSizes = ["2.1rem", "1.35rem", "1.1rem"]
+dataframeHeaderBackgroundColor = "#EEF2F8"
+# Public, privé, non renseigné, puis couleurs d'appoint.
+chartCategoricalColors = ["#2453A6", "#E07A3F", "#A3AEC2", "#2E9E83", "#8A63C7", "#D4A72C"]
+chartSequentialColors = ["#E8EEF8", "#C9D6EE", "#A6BCE2", "#80A0D4", "#5B84C4", "#3A69B3", "#2453A6", "#1C428A", "#15326B", "#0E234C"]
+
+[theme.sidebar]
+backgroundColor = "#13223F"
+secondaryBackgroundColor = "#1D3157"
+textColor = "#E4EAF5"
+primaryColor = "#8FB2F0"
+borderColor = "#2A4170"
