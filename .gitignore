@@ -11,6 +11,7 @@ wheels/
 
 # Data files
 data/
+donnees/
 *.csv
 *.DS_Store
 
