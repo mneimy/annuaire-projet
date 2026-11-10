@@ -5,6 +5,7 @@ Ingestion des données de l'annuaire de l'éducation nationale
 
 import pandas as pd
 import requests
+
 from annuaire.config import LIMIT, MAX_OFFSET, URL_BASE
 
 

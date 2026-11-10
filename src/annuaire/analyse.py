@@ -3,25 +3,53 @@ Contien les fonctions d'analyse des données de l'annuaire de l'éducation natio
 
 """
 from collections import Counter
+from collections.abc import Iterator
+from dataclasses import dataclass, field
+
 import pandas as pd
+from pydantic import ValidationError
+
+from .config import CHAMPS
+from .lecture import Lecteur
+from .model import Etablissement
 
 
-def etablissements_par_departement(df: pd.DataFrame) -> dict[str, int]:
+@dataclass
+class Rejets:
+    """Combien d'enregistrements ont ete ecartes, et pourquoi.
+
+    Un pipeline qui jette des lignes en silence est un pipeline qui ment. On compte.
     """
-    Analyse des établissements par département et retourne 
-    le dictionnaire des départements avec le nombre d'établissements 
-    trié par nombre d'établissements décroissant
-    """
-    results: dict[str, int] = {}
 
-    for i in range(len(df)):
-        dep = df.iloc[i]["libelle_departement"]
-        if dep in results:
-            results[dep] = results[dep] + 1
-        else:
-            results[dep] = 1
-    tries = sorted(results.items(), key=lambda item: item[1], reverse=True)
-    return dict(tries)    
+    total: int = 0
+    par_motif: Counter[str] = field(default_factory=Counter)
+
+    def noter(self, erreur: ValidationError) -> None:
+        self.total += 1
+        for detail in erreur.errors():
+            self.par_motif[str(detail["loc"][0])] += 1
+
+
+
+
+def valider(lecteur: Lecteur, rejets: Rejets | None = None) -> Iterator[Etablissement]:
+    """Transforme les enregistrements bruts en entites validees, en ecartant les invalides."""
+    for brut in lecteur.lire():
+        try:
+            yield Etablissement.model_validate(
+                {cible: brut.get(source) for cible, source in CHAMPS.items()}
+            )
+        except ValidationError as erreur:
+            if rejets is not None:
+                rejets.noter(erreur)
+
+def ouverts_par_departement(lecteur: Lecteur) -> Counter[str]:
+    """
+    Compte les établissements ouverts par département, quelle que soit la source.
+    """
+    return Counter(e.departement for e in valider(lecteur) if e.est_ouvert)
+
+
 
 
 def pourcentage_etablissements_publics_privés(df: pd.DataFrame) -> str:
@@ -40,13 +68,7 @@ def pourcentage_etablissements_publics_privés(df: pd.DataFrame) -> str:
 
     return f"Pourcentage d'établissements publics: {prc_public}%"
 
-def etab_ouvert_par_annee(df: pd.DataFrame) -> dict:
-    """
-    Analyse des établissements ouverts par année,
-    retourne le dictionnaire des années avec le nombre d'établissements ouverts.
-    """
-    df["annee"] = df["date_ouverture"].str[0:4]
-    return df.groupby("annee").size().tail(20)
+
 
 
 

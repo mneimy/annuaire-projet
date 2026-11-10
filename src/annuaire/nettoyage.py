@@ -3,6 +3,7 @@ contien les fonctions de nettoyage des données de l'annuaire de l'éducation na
 """
 
 import pandas as pd
+
 from annuaire.config import columns_to_keep, etat_to_keep
 
 

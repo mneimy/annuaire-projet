@@ -1,6 +1,11 @@
-def main():
-    print("Hello from annuaire-project!")
+"""Point d'entrée du projet : le programme est annuaire.cli."""
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
+
+from annuaire.cli import main
 
 if __name__ == "__main__":
     main()
