@@ -5,9 +5,16 @@ from pathlib import Path
 
 URL_BASE = "https://data.education.gouv.fr/api/explore/v2.1/catalog/datasets/fr-en-annuaire-education/records"
 
-LIMIT = 1000
-OFFSET = 0
-MAX_OFFSET = 70000 
+LIMIT = 100
+OFFSET = 1000
+MAX_OFFSET = 3000
+CSV_FILE = Path("donnees/etablissements.csv")
+PARQUET_FILE = Path("donnees/etablissements.parquet")
+MAX_ENREGISTREMENTS = 70000
+DELAI_ATTENTE_S = 30
+TRI = "identifiant_de_l_etablissement"
+Files_path = Path("donnees/etablissements_ingestion.csv")
+
 etat_to_keep = [
     "OUVERT"
 ]
@@ -29,13 +36,6 @@ columns_to_keep = [
 status_to_keep = [
     "Public"
 ]
-
-CSV_FILE = Path("../donnees/etablissements.csv")
-PARQUET_FILE = Path("../donnees/etablissements.parquet")
-MAX_ENREGISTREMENTS = 70000
-DELAI_ATTENTE_S = 30
-TRI = "identifiant_de_l_etablissement"
-
 
 CHAMPS = {
     "identifiant": "identifiant_de_l_etablissement",

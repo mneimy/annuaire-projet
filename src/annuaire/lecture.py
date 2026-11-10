@@ -14,7 +14,7 @@ from typing import Any, Protocol
 import pyarrow.parquet as pq
 import requests
 
-from .config import CSV_FILE, MAX_ENREGISTREMENTS, OFFSET, PARQUET_FILE, TRI, URL_BASE
+from .config import CSV_FILE, DELAI_ATTENTE_S, LIMIT, PARQUET_FILE, TRI, URL_BASE
 
 
 class Lecteur(Protocol):
@@ -25,6 +25,16 @@ class Lecteur(Protocol):
         """
         Produit des enregistrements.
         """
+
+class LecteurMemoire:
+    """Relit des enregistrements déjà en mémoire, sans rappeler la source."""
+
+    def __init__(self, lignes: list[dict[str, Any]]) -> None:
+        self.lignes = lignes
+
+    def lire(self) -> Iterator[dict[str, Any]]:
+        yield from self.lignes
+
 
 class LecteurCsv:
     """
@@ -64,19 +74,43 @@ class LecteurApi:
         self.url = url
 
 
-    def lire(self) -> Iterator[dict[str, str | int]]:
-        """
-        Produit des enregistrements.
-        """
+    def lire(self, offset: int = 0, filtre: str | None = None) -> Iterator[dict[str, Any]]:
+        """Produit une page d'enregistrements, à partir de ``offset``."""
         parametres: dict[str, int | str] = {
-            "limit": MAX_ENREGISTREMENTS,
-            "offset": OFFSET,
-            "sort": TRI,
+            "limit": LIMIT,
+            "offset": offset,
+            "order_by": TRI,
         }
-        response = requests.get(self.url, params=parametres)
+        if filtre is not None:
+            parametres["where"] = filtre
+        response = requests.get(self.url, params=parametres, timeout=DELAI_ATTENTE_S)
         response.raise_for_status()
-        
         yield from response.json()["results"]
+
+    def codes_departement(self) -> list[str]:
+        """Liste les codes département présents dans l'annuaire."""
+        codes: list[str] = []
+        offset = 0
+        while True:
+            parametres: dict[str, int | str] = {
+                "select": "code_departement",
+                "group_by": "code_departement",
+                "order_by": "code_departement",
+                "limit": LIMIT,
+                "offset": offset,
+            }
+            response = requests.get(self.url, params=parametres, timeout=DELAI_ATTENTE_S)
+            response.raise_for_status()
+            page = response.json()["results"]
+            if not page:
+                break
+            codes.extend(
+                code for ligne in page if (code := ligne.get("code_departement"))
+            )
+            if len(page) < LIMIT:
+                break
+            offset += LIMIT
+        return codes
 
 
 

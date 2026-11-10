@@ -65,15 +65,21 @@ uv remove polars
 
 ## Démarrer
 
-`main.py` ajoute `src/` au chemin Python, puis appelle `annuaire.cli`. Les chemins de `config.py` (`../donnees/...`) sont relatifs au répertoire courant : le CLI se lance **depuis `src/`**.
+`main.py` ajoute `src/` au chemin Python, puis appelle `ingestion.ingestion_donnees`. On le lance **depuis la racine** du projet : le fichier produit est `donnees/etablissements_ingestion.csv`.
 
 ```bash
-cd src
-uv run python ../main.py --help
-uv run python ../main.py --source parquet
+uv run python main.py --help
+uv run python main.py --source parquet
+uv run python main.py --source api --maj
 ```
 
 `--source` vaut `csv` (défaut), `parquet` ou `api`.
+
+L'application web se lance aussi depuis la racine. La première page est le tableau de bord, la seconde l'annuaire (filtres, extraction CSV, date de mise à jour) :
+
+```bash
+uv run streamlit run app.py
+```
 
 | Source | Lecture | À savoir |
 |---|---|---|
@@ -88,34 +94,31 @@ Depuis la racine, seul `--help` est fiable. Un `--source csv` ou `parquet` lanc�
 ## Carte du projet
 
 ```text
-main.py                  point d'entrée : délègue à annuaire.cli
+main.py                  point d'entrée : ingestion, puis analyse
+app.py                   application web Streamlit
 comparer.py              quatre façons de compter, chronométrables
 donnees/                 CSV et Parquet locaux
 src/annuaire/
-  cli.py                 choisit la source et affiche les indicateurs
   config.py              URL, limites, colonnes, chemins, correspondance des champs
   lecture.py             Lecteur CSV, Parquet, API (même contrat)
   model.py               Etablissement validé par Pydantic
   analyse.py             validation, comptes, part du public
-  ingestion.py           téléchargement pandas, page par page
+  ingestion.py           téléchargement, fichier local, mise à jour
   nettoyage.py           filtre pandas (colonnes, département, état)
+  interface/             pages Streamlit (tableau de bord, annuaire)
 ```
 
 Deux façons de travailler coexistent.
 
-Le chemin utilisé par `main.py` est typé. `cli.py` est le seul endroit qui choisit une source. `lecture.py` produit des dictionnaires. `analyse.valider` les transforme en `Etablissement` et compte les rejets. Le CLI ne garde ensuite que les établissements ouverts.
+Le chemin utilisé par `main.py` est typé. `ingestion.py` est le seul endroit qui récupère les données. `lecture.py` produit des dictionnaires. `analyse.valider` les transforme en `Etablissement` et compte les rejets. `main.py` ne garde ensuite que les établissements ouverts.
 
-L'autre chemin est un flux pandas, non branché sur le CLI. `ingestion.get_data` interroge l'API, `nettoyage.clean_data` filtre le tableau, `analyse.pourcentage_etablissements_publics_privés` calcule la part du public en parcourant les lignes.
+`nettoyage.clean_data` filtre un tableau pandas. `analyse.pourcentage_etablissements_publics_privés` calcule la part du public en parcourant les lignes. Ces deux fonctions ne sont pas branchées sur `main.py`.
 
 ## Rôle de chaque script
 
 ### `main.py`
 
-Lanceur. Il place `src/` sur `sys.path` pour que le paquet `annuaire` soit importable, puis appelle `cli.main`. On ne met pas la logique d'analyse ici.
-
-### `src/annuaire/cli.py`
-
-Programme. Argument `--source`, construction du lecteur, validation, affichage : nombre d'ouverts, part du public, enregistrements écartés, top 5 des départements.
+Lanceur. Il place `src/` sur `sys.path`, appelle `ingestion_donnees`, puis affiche les indicateurs : nombre d'ouverts, part du public, enregistrements écartés, top 5 des départements. `--maj` force un nouveau téléchargement.
 
 ### `src/annuaire/config.py`
 
@@ -135,7 +138,7 @@ Modèle `Etablissement` : identifiant, nom, type, statut (`Public` ou `Privé`),
 
 ### `src/annuaire/ingestion.py`
 
-`get_data(offset)` télécharge une page de l'API (`LIMIT` lignes) et la renvoie en DataFrame. La boucle s'arrête au premier `return` : un appel récupère une page, pas tout l'annuaire.
+`ingestion_donnees` relit `donnees/etablissements_ingestion.csv` s'il existe. Sinon, ou avec `--maj`, il télécharge la source demandée (`csv`, `parquet` ou `api`) et réécrit ce fichier.
 
 ### `src/annuaire/nettoyage.py`
 
@@ -164,11 +167,11 @@ La variante naïve et `apply` lisent tout le CSV : prévoir du temps.
 
 Pour changer un seuil, une colonne ou un chemin : `config.py` seulement.
 
-Pour une nouvelle source (autre fichier, autre API) : une classe avec `lire()` dans `lecture.py`, puis une entrée dans le dictionnaire `SOURCES` de `cli.py`. La validation et l'affichage ne bougent pas.
+Pour une nouvelle source (autre fichier, autre API) : une classe avec `lire()` dans `lecture.py`, puis une entrée dans le dictionnaire `SOURCES` de `ingestion.py`. La validation et l'affichage ne bougent pas.
 
-Pour une règle métier (statut, code département, « ouvert ») : `model.py`. Les lignes refusées remontent dans `Rejets`, affichées par le CLI.
+Pour une règle métier (statut, code département, « ouvert ») : `model.py`. Les lignes refusées remontent dans `Rejets`, affichées par `main.py`.
 
-Pour un indicateur : une fonction dans `analyse.py`, appelée depuis `cli.py`.
+Pour un indicateur : une fonction dans `analyse.py`, appelée depuis `main.py`.
 
 Vérifier le style et les types :
 
@@ -177,4 +180,4 @@ uv run ruff check .
 uv run mypy src
 ```
 
-Notebook : `uv run jupyter lab`, à lancer depuis la racine pour `comparer.py` et `donnees/`. Pour importer `annuaire`, le noyau doit voir `src/` (le lanceur `main.py` le fait pour le CLI ; un notebook, non).
+Notebook : `uv run jupyter lab`, à lancer depuis la racine pour `comparer.py` et `donnees/`. Pour importer `annuaire`, le noyau doit voir `src/` (`main.py` l'ajoute tout seul ; un notebook, non).
