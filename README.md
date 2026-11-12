@@ -4,6 +4,23 @@ Lecture de l'annuaire des établissements scolaires (CSV, Parquet ou API du mini
 
 Python **3.14**. Les dépendances sont gérées avec [uv](https://docs.astral.sh/uv/).
 
+## Aperçu
+
+![Tableau de bord : indicateurs France entière](docs/captures/tableau-de-bord.png)
+
+<table>
+  <tr>
+    <td width="58%"><img src="docs/captures/carte-et-departements.png" alt="Carte des établissements (bleu public, orange privé) et départements les mieux dotés"></td>
+    <td width="42%"><img src="docs/captures/a-propos.png" alt="Page À propos : objectif pédagogique, co-développement avec l'IA, pipeline"></td>
+  </tr>
+  <tr>
+    <td><em>Carte de chaque établissement et graphique des départements, côte à côte (onglet Territoires).</em></td>
+    <td><em>Page À propos : objectif, démarche, fiche de chaque indicateur.</em></td>
+  </tr>
+</table>
+
+Données : [Annuaire de l'éducation](https://www.data.gouv.fr/datasets/annuaire-de-leducation), ministère de l'Éducation nationale, data.gouv.fr, Licence Ouverte 2.0. Conçu et développé par **MN Conseil**, en co-développement assisté par l'IA.
+
 ## Installer
 
 Installer uv, une seule fois :
@@ -75,7 +92,7 @@ uv run python main.py --source api --maj
 
 `--source` vaut `csv` (défaut), `parquet` ou `api`.
 
-L'application web se lance aussi depuis la racine. La première page est le tableau de bord, la seconde l'annuaire (filtres, extraction CSV, date de mise à jour) :
+L'application web se lance aussi depuis la racine. Trois pages : le tableau de bord (indicateurs, carte, graphiques), l'annuaire (filtres, extraction CSV) et « À propos » (objectif pédagogique, définition de chaque indicateur). Source citée dans le menu : Annuaire de l'éducation, data.gouv.fr, Licence Ouverte 2.0.
 
 ```bash
 uv run streamlit run app.py
@@ -105,7 +122,8 @@ src/annuaire/
   analyse.py             validation, comptes, part du public
   ingestion.py           téléchargement, fichier local, mise à jour
   nettoyage.py           filtre pandas (colonnes, département, état)
-  interface/             pages Streamlit (tableau de bord, annuaire)
+  interface/             pages Streamlit (tableau de bord, annuaire, à propos), graphiques, style
+.streamlit/config.toml   thème de l'application (couleurs, polices Inter et Plus Jakarta Sans)
 ```
 
 Deux façons de travailler coexistent.

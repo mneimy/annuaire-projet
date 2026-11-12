@@ -15,7 +15,10 @@ showWidgetBorder = true
 baseRadius = "0.6rem"
 buttonRadius = "0.5rem"
 baseFontSize = 15
-headingFontWeights = [700, 650, 600, 600, 600, 600]
+# Polices Google Fonts : Inter pour le texte, Plus Jakarta Sans pour les titres et les chiffres.
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+headingFont = "Plus Jakarta Sans:https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
+headingFontWeights = [800, 700, 700, 600, 600, 600]
 headingFontSizes = ["2.1rem", "1.35rem", "1.1rem"]
 dataframeHeaderBackgroundColor = "#EEF2F8"
 # Public, privé, non renseigné, puis couleurs d'appoint.

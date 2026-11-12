@@ -10,6 +10,9 @@ SECTEURS = ["Public", "Privé", "Non renseigné"]
 COULEURS_SECTEURS = alt.Scale(domain=SECTEURS, range=[PUBLIC, PRIVE, NON_RENSEIGNE])
 
 HAUTEUR_BARRE = 26
+# Police système pour les libellés d'axe : Vega mesure le texte avant que la police web
+# (Inter) soit chargée ; avec une police déjà présente, la mesure est juste et rien n'est rogné.
+POLICE_AXE = "Helvetica Neue, Helvetica, Arial, sans-serif"
 
 
 def effectif(nombre: int) -> str:
@@ -32,17 +35,28 @@ def barres(
             f"{libelle}:N",
             sort="-x",
             title=None,
-            axis=alt.Axis(labelLimit=260, labelFontSize=12, ticks=False, domain=False),
+            axis=alt.Axis(
+                labelLimit=260,
+                labelFontSize=12,
+                labelFont=POLICE_AXE,
+                ticks=False,
+                domain=False,
+            ),
             scale=alt.Scale(paddingInner=0.3),
         ),
         x=alt.X("Effectif:Q", title=None, axis=None),
-        tooltip=[alt.Tooltip(f"{libelle}:N"), alt.Tooltip("Effectif:Q", format=format_valeur)],
+        tooltip=[
+            alt.Tooltip(f"{libelle}:N"),
+            alt.Tooltip("Effectif:Q", format=format_valeur),
+        ],
     )
     graphique = base.mark_bar(color=couleur, cornerRadiusEnd=4)
     valeurs = base.mark_text(align="left", dx=4, fontSize=11, color="#4A5568").encode(
         text=alt.Text("Effectif:Q", format=format_valeur)
     )
-    return (graphique + valeurs).properties(height=alt.Step(HAUTEUR_BARRE))
+    return (graphique + valeurs).properties(
+        height=alt.Step(HAUTEUR_BARRE), background="transparent"
+    )
 
 
 def barres_par_secteur(tableau: pd.DataFrame, libelle: str) -> alt.Chart:
@@ -58,7 +72,9 @@ def barres_par_secteur(tableau: pd.DataFrame, libelle: str) -> alt.Chart:
         .melt(id_vars=libelle, var_name="Secteur", value_name="Effectif")
     )
     longues = longues[longues["Effectif"] > 0]
-    longues["Part"] = longues["Effectif"] / longues.groupby(libelle)["Effectif"].transform("sum")
+    longues["Part"] = longues["Effectif"] / longues.groupby(libelle)[
+        "Effectif"
+    ].transform("sum")
     return (
         alt.Chart(longues)
         .mark_bar()
@@ -67,10 +83,20 @@ def barres_par_secteur(tableau: pd.DataFrame, libelle: str) -> alt.Chart:
                 f"{libelle}:N",
                 sort=ordre,
                 title=None,
-                axis=alt.Axis(labelLimit=260, labelFontSize=12, ticks=False, domain=False),
+                axis=alt.Axis(
+                    labelLimit=260,
+                    labelFontSize=12,
+                    labelFont=POLICE_AXE,
+                    ticks=False,
+                    domain=False,
+                ),
                 scale=alt.Scale(paddingInner=0.3),
             ),
-            x=alt.X("Effectif:Q", title=None, axis=alt.Axis(format="~s", grid=True)),
+            x=alt.X(
+                "Effectif:Q",
+                title=None,
+                axis=alt.Axis(format="d", grid=True, tickCount=5, labelFont=POLICE_AXE),
+            ),
             color=alt.Color(
                 "Secteur:N",
                 scale=COULEURS_SECTEURS,
@@ -87,7 +113,7 @@ def barres_par_secteur(tableau: pd.DataFrame, libelle: str) -> alt.Chart:
         .transform_calculate(
             ordre_secteur="indexof(['Public', 'Privé', 'Non renseigné'], datum.Secteur)"
         )
-        .properties(height=alt.Step(HAUTEUR_BARRE))
+        .properties(height=alt.Step(HAUTEUR_BARRE), background="transparent")
     )
 
 
@@ -103,5 +129,5 @@ def colonnes_annuelles(serie: pd.Series) -> alt.Chart:
             y=alt.Y("Ouvertures:Q", title=None),
             tooltip=["Année:O", alt.Tooltip("Ouvertures:Q", format="d")],
         )
-        .properties(height=260)
+        .properties(height=260, background="transparent")
     )
