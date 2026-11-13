@@ -2,6 +2,43 @@
 Configuration du projet
 """
 from pathlib import Path
+from typing import Literal
+
+from pydantic import Field, PostgresDsn
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Reglages(BaseSettings):
+    """Les parametres du chargement. Prefixe `ANNUAIRE_` pour ne rien confondre."""
+
+    model_config = SettingsConfigDict(
+        env_prefix="ANNUAIRE_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    base_url: PostgresDsn
+    source: Path = Path("donnees/brut")
+    lot: int = Field(default=2_000, ge=1, le=3_000)
+    journal_niveau: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
+    journal_json: bool = False
+
+    @property
+    def url_pour_sqlalchemy(self) -> str:
+        """L'URL complete, mot de passe compris.
+
+        Attention : `str(url)` masque le mot de passe par `***` cote SQLAlchemy. Ici c'est
+        pydantic qui tient l'URL, et il ne le masque pas — ce qui veut dire qu'il ne faut
+        JAMAIS journaliser cette chaine. C'est la raison d'etre de `url_pour_journal`.
+        """
+        return str(self.base_url)
+
+    @property
+    def url_pour_journal(self) -> str:
+        """La meme URL, sans le mot de passe. C'est celle-ci qu'on ecrit dans le journal."""
+        hote = self.base_url.hosts()[0]
+        return f"{self.base_url.scheme}://{hote['username']}@{hote['host']}:{hote['port']}{self.base_url.path}"
 
 URL_BASE = "https://data.education.gouv.fr/api/explore/v2.1/catalog/datasets/fr-en-annuaire-education/records"
 
